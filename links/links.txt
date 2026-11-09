@@ -1,0 +1,29 @@
+# 快捷链接（公开版）
+# 每行格式：名称|网址；# 开头是分组标题。改这个文件即可更新页面。
+
+# 账号与二次验证
+二次验证（2FA 验证码）|https://2fa.fun/
+
+# 飞书与文档
+飞书开放平台|https://open.feishu.cn/app
+美区刷区教程（飞书 wiki）|https://icnacor298h5.feishu.cn/wiki/Aorxw8KCBiJLq5ku4bMcDm5NnQt
+
+# 网络与 IP
+静态 IP（1024proxy）|https://1024proxy.com/|仅本地
+IP 信息查询（ipinfo）|https://ipinfo.io/signup
+IP 纯净度（ping0）|https://ping0.cc/
+IP 风险评分（scamalytics）|https://scamalytics.com/|仅本地
+IP 检测（ipjiance）|https://ipjiance.com/
+
+# 服务器与面板
+3xui 面板 A（74.211.105.185）|https://74.211.105.185:35172/|仅本地
+3xui 面板 B（45.62.127.237）|https://45.62.127.237:13502/|仅本地
+搬瓦工后台|https://bandwagonhost.com/clientarea.php
+搬瓦工流量监控|https://kiwivm.64clouds.com/|仅本地
+
+# 平台后台
+Facebook 广告管理工具|https://adsmanager.facebook.com/adsmanager/manage/adsets|仅本地
+
+# 其他
+dsh 插件仓库|https://github.com/awesome-dsh-plugin/awesome-dsh-plugin#memory
+代充 codex|https://www.aivipzc88.com/

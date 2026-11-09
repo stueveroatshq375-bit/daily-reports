@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>快捷链接</title>
+<style>
+:root{
+  --bg:#f5f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e5e9f2;
+  --primary:#2563eb;--primary-soft:#eff6ff;--shadow:0 2px 12px rgba(15,23,42,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0b1220;--card:#131c2e;--text:#e8eefc;--muted:#93a3bd;--border:#22304a;
+        --primary:#5b8cff;--primary-soft:#1a2743;--shadow:0 2px 14px rgba(0,0,0,.35);}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;padding:20px 14px 40px;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
+  line-height:1.5;font-size:15px}
+.wrap{max-width:760px;margin:0 auto}
+header{margin-bottom:18px}
+h1{margin:0 0 6px;font-size:26px;letter-spacing:-.5px}
+.sub{color:var(--muted);font-size:13px}
+.search{position:relative;margin:16px 0 20px}
+.search input{width:100%;padding:13px 42px 13px 16px;font-size:15px;color:var(--text);
+  background:var(--card);border:1px solid var(--border);border-radius:14px;outline:none;
+  box-shadow:var(--shadow);font-family:inherit}
+.search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.search .ico{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px}
+.group{margin-bottom:22px}
+.gtitle{display:flex;align-items:center;gap:8px;margin:0 0 10px 4px;font-size:13px;
+  font-weight:700;color:var(--muted);letter-spacing:.5px}
+.gtitle::before{content:"";width:4px;height:14px;border-radius:2px;background:var(--primary)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+a.item{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;text-decoration:none;color:inherit;
+  box-shadow:var(--shadow);transition:transform .12s,border-color .12s,box-shadow .12s;position:relative}
+a.item:hover{transform:translateY(-1px);border-color:var(--primary);box-shadow:0 6px 18px rgba(37,99,235,.14)}
+a.item:active{transform:scale(.985)}
+.badge{flex:0 0 38px;height:38px;border-radius:11px;background:var(--primary-soft);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.meta{min-width:0;flex:1}
+.name{font-weight:650;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.host{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.lock{flex:0 0 auto;font-size:11px;color:var(--muted);background:var(--primary-soft);
+  padding:3px 7px;border-radius:7px;font-weight:600}
+.copy{border:0;background:transparent;color:var(--muted);font-size:15px;cursor:pointer;padding:4px;border-radius:8px}
+.copy:hover{background:var(--primary-soft);color:var(--primary)}
+.empty{padding:40px 10px;text-align:center;color:var(--muted);font-size:14px}
+footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);
+  font-size:12px;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+footer a{color:var(--primary);text-decoration:none}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;
+  background:#0f172a;color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;
+  transition:.22s;pointer-events:none;z-index:9}
+.toast.on{opacity:.95;transform:translate(-50%,0)}
+@media(max-width:520px){body{padding:16px 10px 32px}h1{font-size:22px}
+  .grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>快捷链接</h1>
+    <div class="sub">个人常用入口 · 点击直达 · 点右侧 ⧉ 复制地址</div>
+  </header>
+
+  <div class="search">
+    <input id="q" type="search" placeholder="搜索名称或域名…" autocomplete="off" spellcheck="false">
+    <span class="ico">⌕</span>
+  </div>
+
+  <div id="body"><div class="empty">加载中…</div></div>
+
+  <footer>
+    <span id="stamp">—</span>
+    <span id="hint"></span>
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+window.__LINKS__ = null;
+(async function () {
+  var raw = window.__LINKS__;
+  if (!raw) {
+    try {
+      var r = await fetch('links.txt?t=' + Date.now(), {cache: 'no-store'});
+      if (!r.ok) throw new Error(r.status);
+      raw = await r.text();
+    } catch (e) {
+      document.getElementById('body').innerHTML =
+        '<div class="empty">读取 links.txt 失败：' + e.message + '</div>';
+      return;
+    }
+  }
+  render(Array.isArray(raw) ? raw : parse(raw));
+})();
+
+function parse(text) {
+  var groups = [], cur = null;
+  text.split(/\r?\n/).forEach(function (line) {
+    line = line.trim();
+    if (!line || line.charAt(0) === '//') return;
+    if (line.charAt(0) === '#') {
+      cur = {title: line.replace(/^#+\s*/, '').trim() || '未分组', items: []};
+      groups.push(cur);
+      return;
+    }
+    var parts = line.split('|');
+    if (parts.length < 2) return;
+    var name = parts[0].trim(), url = parts[1].trim();
+    if (!/^https?:\/\//i.test(url)) return;
+    if (!cur) { cur = {title: '未分组', items: []}; groups.push(cur); }
+    cur.items.push({name: name, url: url, note: (parts[2] || '').trim()});
+  });
+  return groups.filter(function (g) { return g.items.length; });
+}
+
+function initials(name) {
+  var n = name.replace(/[\s（）()·\-—]/g, '');
+  return n.slice(0, 2).toUpperCase();
+}
+function hostOf(u) {
+  try { return new URL(u).host; } catch (e) { return u.replace(/^https?:\/\//, '').split('/')[0]; }
+}
+
+function render(groups) {
+  var body = document.getElementById('body');
+  if (!groups.length) { body.innerHTML = '<div class="empty">没有可显示的链接</div>'; return; }
+  var html = '';
+  groups.forEach(function (g) {
+    html += '<section class="group"><h2 class="gtitle">' + esc(g.title) + '</h2><div class="grid">';
+    g.items.forEach(function (it) {
+      html += '<a class="item" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer"'
+            + ' data-name="' + esc(it.name) + '" data-host="' + esc(hostOf(it.url)) + '">'
+            + '<span class="badge">' + esc(initials(it.name)) + '</span>'
+            + '<span class="meta"><span class="name">' + esc(it.name) + '</span>'
+            + '<span class="host">' + esc(hostOf(it.url)) + '</span></span>'
+            + (it.note ? '<span class="lock">' + esc(it.note) + '</span>' : '')
+            + '<button class="copy" title="复制链接" data-url="' + esc(it.url) + '">⧉</button>'
+            + '</a>';
+    });
+    html += '</div></section>';
+  });
+  body.innerHTML = html;
+  document.getElementById('q').addEventListener('input', filter);
+  body.addEventListener('click', function (e) {
+    var btn = e.target.closest('.copy');
+    if (!btn) return;
+    e.preventDefault(); e.stopPropagation();
+    copy(btn.getAttribute('data-url'));
+  });
+  document.getElementById('stamp').textContent = '共 ' + groups.reduce(function (s, g) { return s + g.items.length; }, 0) + ' 条 · 更新 ' + new Date().toISOString().slice(0, 10);
+}
+
+function filter() {
+  var q = this.value.trim().toLowerCase();
+  document.querySelectorAll('a.item').forEach(function (a) {
+    var hit = !q || (a.dataset.name + ' ' + a.dataset.host).toLowerCase().indexOf(q) > -1;
+    a.style.display = hit ? '' : 'none';
+  });
+  document.querySelectorAll('.group').forEach(function (sec) {
+    var vis = [].some.call(sec.querySelectorAll('a.item'), function (a) { return a.style.display !== 'none'; });
+    sec.style.display = vis ? '' : 'none';
+  });
+}
+
+function copy(u) {
+  var done = function () { toast('已复制'); };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(u).then(done, function () { legacy(u, done); });
+  } else legacy(u, done);
+}
+function legacy(u, cb) {
+  var t = document.createElement('textarea');
+  t.value = u; t.style.position = 'fixed'; t.style.opacity = '0';
+  document.body.appendChild(t); t.select();
+  try { document.execCommand('copy'); cb(); } catch (e) { toast('复制失败'); }
+  document.body.removeChild(t);
+}
+function toast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('on');
+  clearTimeout(window.__tt);
+  window.__tt = setTimeout(function () { el.classList.remove('on'); }, 1400);
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[c];
+  });
+}
+</script>
+</body>
+</html>
